@@ -1,4 +1,4 @@
-use clap::{arg, App, Command};
+use clap::{arg, App};
 use colored::Colorize;
 use std::env;
 
@@ -29,7 +29,7 @@ pub fn parse_options() -> Result<CommandParams, anyhow::Error> {
     //.arg(arg!(-T --tor "Use TOR."))
 
     let matches: clap::ArgMatches;
-    if let Ok(mut env_args) = env::var("QS_ARGS") {
+    if let Ok(env_args) = env::var("QS_ARGS") {
         let mut args = vec!["qs-lite"];
         args.append(env_args.split_whitespace().collect::<Vec<&str>>().as_mut());
         matches = app.get_matches_from(args);

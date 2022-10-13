@@ -1,10 +1,7 @@
-#![allow(unused)]
+#![windows_subsystem = "windows"]
 // use anyhow::Result;
-use anyhow::anyhow;
-use portable_pty::{native_pty_system, CommandBuilder, PtySize, PtySystem};
+use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use std::io::prelude::*;
-use std::net::TcpStream;
-use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
@@ -48,7 +45,7 @@ fn start_probing_qsrn(opts: &options::CommandParams) -> Result<(), anyhow::Error
         let mut qsock = qsocket_rs::Qsocket::new(&opts.secret, qsocket_rs::TAG_ID_NC);
         match qsock.dial(!opts.no_tls, opts.verify_cert) {
             Ok(_) => (),
-            Err(e) => continue,
+            Err(_) => continue,
         }
         qsock.set_write_timeout(Some(Duration::new(0, 50000)))?;
         qsock.set_read_timeout(Some(Duration::new(0, 50000)))?;
@@ -70,8 +67,8 @@ fn start_probing_qsrn(opts: &options::CommandParams) -> Result<(), anyhow::Error
         // Read and parse output from the pty with reader
         let mut reader = pair.master.try_clone_reader()?;
         let qsock = Arc::new(Mutex::new(qsock));
-        let mut stream1 = qsock.clone();
-        let mut stream2 = qsock.clone();
+        let stream1 = qsock.clone();
+        let stream2 = qsock.clone();
 
         thread::spawn(move || loop {
             let mut buf = vec![0; 1024];
@@ -94,6 +91,6 @@ fn start_probing_qsrn(opts: &options::CommandParams) -> Result<(), anyhow::Error
             }
         });
 
-        child.wait();
+        child.wait()?;
     }
 }
