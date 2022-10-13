@@ -277,12 +277,10 @@ dependencies = [
  "anyhow",
  "clap",
  "colored",
- "md5",
  "portable-pty",
  "qsocket-rs",
  "rand",
  "rustls",
- "uuid",
 ]
 
 [[package]]
@@ -536,12 +534,6 @@ name = "untrusted"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
-
-[[package]]
-name = "uuid"
-version = "1.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
 
 [[package]]
 name = "version_check"
