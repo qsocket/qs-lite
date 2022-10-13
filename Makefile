@@ -1,7 +1,5 @@
 CURRET_DIR=$(shell pwd)
 BUILD=cargo build --release
-$(shell mkdir -p build/{windows,linux,darwin,android,ios,freebsd,openbsd,solaris,aix,illumos,dragonfly})
-
 default:
 	${BUILD}
 windows:
