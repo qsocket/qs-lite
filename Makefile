@@ -1,5 +1,5 @@
-CURRET_DIR=$(shell pwd)
-BUILD=cargo build --release
+# BUILD=cargo build --release
+BUILD=cross build --release
 default:
 	${BUILD}
 windows:
@@ -8,7 +8,7 @@ windows:
 # ${BUILD} --target aarch64-pc-windows-msvc
 linux:
 	${BUILD} --target x86_64-unknown-linux-gnu
-# ${BUILD} --target i686-unknown-linux-gnu
+	${BUILD} --target i686-unknown-linux-gnu
 # ${BUILD} --target aarch64-unknown-linux-gnu
 # ${BUILD} --target mips-unknown-linux-gnu
 # ${BUILD} --target mips64-unknown-linux-gnuabi64
