@@ -11,7 +11,7 @@ license = "MIT"
 [dependencies]
 portable-pty = "0.7.0"
 anyhow = "1.0.61"
-clap = "3.2.16"
+# structopt = {version = "0.3", default-features = false }
 colored = "2.0.0"
 rand = "0.8.5"
 rustls = { version = "0.20.6", features = ["dangerous_configuration"] }
@@ -19,9 +19,12 @@ rustls = { version = "0.20.6", features = ["dangerous_configuration"] }
 [dependencies.qsocket-rs]
 path = "../qsocket-rs"
 
-
 [profile.release]
 strip = true  # Automatically strip symbols from the binary.
 lto = true
+opt-level = "z"  # Optimize for size.
 codegen-units = 1
 panic = "abort"
+
+# [target.x86_64-unknown-linux-gnu]
+# rustflags = ["-C", "target-feature=+crt-static"]

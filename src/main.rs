@@ -11,10 +11,6 @@ mod utils;
 
 fn main() -> Result<(), anyhow::Error> {
     let mut opts = options::parse_options()?;
-    unsafe {
-        utils::VERBOSE = opts.verbose;
-        utils::QUIET = opts.quiet;
-    }
 
     if opts.generate {
         opts.secret = utils::random_secret();
@@ -34,7 +30,7 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 } // the stream is closed here
 
-fn start_probing_qsrn(opts: &options::CommandParams) -> Result<(), anyhow::Error> {
+fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
     let mut first_run = true;
 
     loop {
@@ -87,7 +83,7 @@ fn start_probing_qsrn(opts: &options::CommandParams) -> Result<(), anyhow::Error
             std::thread::sleep(Duration::new(0, 1000)); // Required for preventing mutex dead lock!
             let n = stream2.lock().unwrap().read(&mut buf).unwrap_or(0);
             if n != 0 {
-                pair.master.write_all(buf[0..n].as_ref());
+                pair.master.write_all(buf[0..n].as_ref()).unwrap();
             }
         });
 
