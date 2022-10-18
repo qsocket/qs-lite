@@ -9,7 +9,7 @@ const DEFAULT_SHELL: &str = "cmd.exe";
 const DEFAULT_SHELL: &str = "bash -il";
 
 const HELP_PROMPT: &str = "USAGE:
-qs-lite [FLAGS] [OPTIONS] --secret <secret>
+qs-lite [FLAGS] [OPTIONS]
 
 FLAGS:
 \t-g, --generate         Verbose output mode
@@ -75,7 +75,9 @@ pub fn parse_options() -> Result<Options, anyhow::Error> {
 
     let mut args: Vec<String> = vec!["qs-lite".to_string()];
     if let Ok(env_var) = env::var("QS_ARGS") {
-        // args.append(env_var.split_whitespace().collect::<Vec<&str>>().as_mut());
+        for var in env_var.split_whitespace() {
+            args.append(vec![var.to_string()].as_mut());
+        }
     } else {
         args = env::args().collect();
     }

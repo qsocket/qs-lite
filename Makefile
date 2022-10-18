@@ -18,7 +18,7 @@ linux:
 # ${BUILD} --target powerpc64-unknown-linux-gnu
 # ${BUILD} --target powerpc64le-unknown-linux-gnu
 freebsd:
-# ${BUILD} --target x86_64-unknown-freebsd
+	${BUILD} --target x86_64-unknown-freebsd
 openbsd:
 # ${BUILD} --target x86_64-unknown-openbsd
 netbsd:
