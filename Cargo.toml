@@ -25,6 +25,3 @@ lto = true
 opt-level = "z"  # Optimize for size.
 codegen-units = 1
 panic = "abort"
-
-# [target.x86_64-unknown-linux-gnu]
-# rustflags = ["-C", "target-feature=+crt-static"]

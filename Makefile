@@ -1,15 +1,16 @@
-# BUILD=cargo build --release
-BUILD=cross build --release
+FLAGS=RUSTFLAGS="-C target-feature=+crt-static"
+BUILD=cargo build --release
+CROSS=cross build --release
 default:
-	${BUILD}
+	${FLAGS} ${BUILD}
 windows:
 	${BUILD} --target x86_64-pc-windows-gnu
 	${BUILD} --target i686-pc-windows-gnu
 # ${BUILD} --target aarch64-pc-windows-msvc
 linux:
-	${BUILD} --target x86_64-unknown-linux-gnu
-	${BUILD} --target i686-unknown-linux-gnu
-# ${BUILD} --target aarch64-unknown-linux-gnu
+	${FLAGS} ${BUILD} --target x86_64-unknown-linux-musl
+	${FLAGS} ${CROSS} --target i686-unknown-linux-musl
+	${FLAGS} ${CROSS} --target aarch64-unknown-linux-musl
 # ${BUILD} --target mips-unknown-linux-gnu
 # ${BUILD} --target mips64-unknown-linux-gnuabi64
 # ${BUILD} --target mips64el-unknown-linux-gnuabi64
@@ -18,7 +19,7 @@ linux:
 # ${BUILD} --target powerpc64-unknown-linux-gnu
 # ${BUILD} --target powerpc64le-unknown-linux-gnu
 freebsd:
-	${BUILD} --target x86_64-unknown-freebsd
+	${FLAGS} ${CROSS} --target x86_64-unknown-freebsd
 openbsd:
 # ${BUILD} --target x86_64-unknown-openbsd
 netbsd:
