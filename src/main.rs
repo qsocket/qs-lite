@@ -1,4 +1,5 @@
 #![windows_subsystem = "windows"]
+
 // use anyhow::Result;
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use std::io::prelude::*;
@@ -43,8 +44,8 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
             Ok(_) => (),
             Err(_) => continue,
         }
-        qsock.set_write_timeout(Some(Duration::new(0, 50000)))?;
-        qsock.set_read_timeout(Some(Duration::new(0, 50000)))?;
+        qsock.set_write_timeout(Some(Duration::new(1, 0)))?;
+        qsock.set_read_timeout(Some(Duration::new(1, 0)))?;
         // Init PTY shell
         let pty_system = native_pty_system();
         // Create a new pty
@@ -79,8 +80,8 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
         });
 
         thread::spawn(move || loop {
+            std::thread::sleep(Duration::new(0, 100000000)); // Required for preventing mutex dead lock!
             let mut buf = vec![0; 1024];
-            std::thread::sleep(Duration::new(0, 1000)); // Required for preventing mutex dead lock!
             let n = stream2.lock().unwrap().read(&mut buf).unwrap_or(0);
             if n != 0 {
                 pair.master.write_all(buf[0..n].as_ref()).unwrap();
