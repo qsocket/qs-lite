@@ -11,10 +11,10 @@ license = "MIT"
 [dependencies]
 portable-pty = "0.7.0"
 anyhow = "1.0.61"
-# structopt = {version = "0.3", default-features = false }
 colored = "2.0.0"
 rand = "0.8.5"
 rustls = { version = "0.20.6", features = ["dangerous_configuration"] }
+rng = "0.1.0"
 
 [dependencies.qsocket-rs]
 path = "../qsocket-rs"

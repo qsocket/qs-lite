@@ -6,7 +6,7 @@ use std::process::exit;
 const DEFAULT_SHELL: &str = "cmd.exe";
 
 #[cfg(not(target_os = "windows"))]
-const DEFAULT_SHELL: &str = "bash";
+const DEFAULT_SHELL: &str = "bash -il";
 
 const HELP_PROMPT: &str = "USAGE:
 qs-lite [FLAGS] [OPTIONS]

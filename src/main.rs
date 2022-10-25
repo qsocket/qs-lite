@@ -1,13 +1,15 @@
-#![windows_subsystem = "windows"]
+//#![windows_subsystem = "windows"]
 
 // use anyhow::Result;
-use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+// use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+use rand::Rng;
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
 use std::time::Duration;
 mod options;
+mod pty;
 mod utils;
 
 fn main() -> Result<(), anyhow::Error> {
@@ -44,50 +46,47 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
             Ok(_) => (),
             Err(_) => continue,
         }
-        qsock.set_write_timeout(Some(Duration::new(1, 0)))?;
-        qsock.set_read_timeout(Some(Duration::new(1, 0)))?;
+        qsock.set_write_timeout(Some(Duration::from_millis(100)))?;
+        qsock.set_read_timeout(Some(Duration::from_millis(100)))?;
         // Init PTY shell
-        let pty_system = native_pty_system();
-        // Create a new pty
-        let mut pair = pty_system
-            .openpty(PtySize {
-                rows: 30,
-                cols: 120,
-                pixel_width: 0,
-                pixel_height: 0,
-            })
-            .unwrap();
-
-        // Spawn a shell into the pty
-        let cmd = CommandBuilder::new(opts.exec.as_str());
-        let mut child = pair.slave.spawn_command(cmd)?;
-        // Read and parse output from the pty with reader
-        let mut reader = pair.master.try_clone_reader()?;
+        let mut proc = pty::new(opts.exec.as_str())?;
         let qsock = Arc::new(Mutex::new(qsock));
         let stream1 = qsock.clone();
         let stream2 = qsock.clone();
+        let mut reader = proc.pair.master.try_clone_reader()?;
+        let mut writer = proc.pair.master.try_clone_writer()?;
 
-        thread::spawn(move || loop {
+        let t1 = thread::spawn(move || loop {
+            let mut rng = rand::thread_rng();
+            std::thread::sleep(Duration::from_millis(rng.gen_range(0..10))); // Required for preventing mutex dead lock!
             let mut buf = vec![0; 1024];
             let n = reader.read(&mut buf).unwrap_or(0);
             if n != 0 {
+                println!("--> {} bytes", n);
                 stream1
                     .lock()
                     .unwrap()
                     .write_all(buf[0..n].as_mut())
-                    .unwrap();
+                    .unwrap_or_default();
             }
         });
 
-        thread::spawn(move || loop {
-            std::thread::sleep(Duration::new(0, 100000000)); // Required for preventing mutex dead lock!
+        let t2 = thread::spawn(move || loop {
+            let mut rng = rand::thread_rng();
+            #[cfg(not(target_os = "windows"))]
+            std::thread::sleep(Duration::from_millis(rng.gen_range(0..10))); // Required for preventing mutex dead lock!
+            #[cfg(target_os = "windows")]
+            std::thread::sleep(Duration::from_millis(rng.gen_range(500..600)));
             let mut buf = vec![0; 1024];
             let n = stream2.lock().unwrap().read(&mut buf).unwrap_or(0);
             if n != 0 {
-                pair.master.write_all(buf[0..n].as_ref()).unwrap();
+                println!("<-- {} bytes", n);
+                writer.write_all(buf[0..n].as_ref()).unwrap_or_default();
             }
         });
 
-        child.wait()?;
+        proc.child.wait()?;
+        drop(t1);
+        drop(t2);
     }
 }
