@@ -15,6 +15,8 @@ colored = "2.0.0"
 rand = "0.8.5"
 rustls = { version = "0.20.6", features = ["dangerous_configuration"] }
 rng = "0.1.0"
+nix = "0.25.0"
+tokio = "1.21.2"
 
 [dependencies.qsocket-rs]
 path = "../qsocket-rs"

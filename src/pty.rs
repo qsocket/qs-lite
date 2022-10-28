@@ -1,4 +1,7 @@
-use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+// use nix::pty;
+// use std::fs::File;
+// use std::os::unix::io::FromRawFd;
+// use std::process::{Child, Command, Stdio};
 
 // pub struct Pty {
 //     pub child: Child,
@@ -41,6 +44,7 @@ use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 
 // ==============================================================================================================
 
+use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 pub struct Pty {
     pub child: Box<dyn portable_pty::Child + std::marker::Send + std::marker::Sync>,
     pub pair: portable_pty::PtyPair,

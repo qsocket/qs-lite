@@ -1,6 +1,6 @@
 //#![windows_subsystem = "windows"]
 
-use anyhow::{anyhow, Ok};
+use anyhow::anyhow;
 // use anyhow::Result;
 // use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use std::io::prelude::*;
@@ -8,9 +8,16 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time;
 use std::time::Duration;
+
 mod options;
 mod pty;
 mod utils;
+
+#[cfg(target_os = "windows")]
+const TIMEOUT: u64 = 2000;
+
+#[cfg(not(target_os = "windows"))]
+const TIMEOUT: u64 = 100;
 
 fn main() -> Result<(), anyhow::Error> {
     let mut opts = options::parse_options()?;
@@ -46,45 +53,59 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
             std::result::Result::Ok(_) => (),
             Err(_) => continue,
         }
-        qsock.set_write_timeout(Some(Duration::from_millis(100)))?;
-        qsock.set_read_timeout(Some(Duration::from_millis(100)))?;
+        qsock.set_write_timeout(Some(Duration::from_millis(TIMEOUT)))?;
+        qsock.set_read_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         // Init PTY shell
+
         let mut proc = pty::new(opts.exec.as_str())?;
-        let mut reader = proc.pair.master.try_clone_reader()?;
-        let mut writer = proc.pair.master.try_clone_writer()?;
+        let reader = proc.pair.master.try_clone_reader()?;
+        let writer = proc.pair.master.try_clone_writer()?;
         let reader = Arc::new(Mutex::new(reader));
         let writer = Arc::new(Mutex::new(writer));
         let qsock = Arc::new(Mutex::new(qsock));
 
         loop {
-            copy_until(reader, qsock, Duration::from_millis(100));
-            copy_until(qsock, writer, Duration::from_millis(100));
+            if proc.child.try_wait()?.is_some() {
+                break;
+            }
+            println!("pty -> sock");
+            copy_until(reader.clone(), qsock.clone(), TIMEOUT).unwrap_or_default();
+            println!("sock -> pty");
+            copy_until(qsock.clone(), writer.clone(), TIMEOUT).unwrap_or_default();
         }
     }
 }
 
 fn copy_until<S, D>(
-    reader: &mut Mutex<S>,
-    writer: &mut Mutex<D>,
-    dur: std::time::Duration,
-) -> Result<u64, anyhow::Error>
+    reader: Arc<Mutex<S>>,
+    writer: Arc<Mutex<D>>,
+    dur: u64,
+) -> Result<usize, anyhow::Error>
 where
-    S: Read + std::marker::Sync + std::marker::Send,
-    D: Write + std::marker::Sync + std::marker::Send,
+    S: Read + std::marker::Send + 'static,
+    D: Write + std::marker::Send + 'static,
 {
     let (sender, receiver) = std::sync::mpsc::channel();
     let t = thread::spawn(move || {
-        match sender.send(std::io::copy(
-            &mut *reader.lock().unwrap(),
-            &mut *writer.lock().unwrap(),
-        )) {
-            std::result::Result::Ok(()) => {} // everything good
-            Err(_) => {}                      // we have been released, don't panic
+        let mut buf = vec![0; 4096];
+        println!("Reading...");
+        let n = reader.lock().unwrap().read(&mut buf).unwrap_or(0);
+        if n != 0 {
+            println!("Writing...");
+            writer
+                .lock()
+                .unwrap()
+                .write_all(&buf[0..n])
+                .unwrap_or_default();
         }
+        sender.send(n)
     });
     drop(t);
-    match receiver.recv_timeout(dur)? {
-        std::result::Result::Ok(n) => Ok(n),
-        Err(e) => Err(anyhow!(e)),
+    match receiver.recv_timeout(Duration::from_millis(dur)) {
+        Ok(n) => Ok(n),
+        Err(e) => {
+            println!("Error: {}", e);
+            Err(anyhow!(e))
+        }
     }
 }
