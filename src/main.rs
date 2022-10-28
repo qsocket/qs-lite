@@ -17,7 +17,7 @@ mod utils;
 const TIMEOUT: u64 = 2000;
 
 #[cfg(not(target_os = "windows"))]
-const TIMEOUT: u64 = 100;
+const TIMEOUT: u64 = 50;
 
 fn main() -> Result<(), anyhow::Error> {
     let mut opts = options::parse_options()?;
@@ -57,20 +57,15 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
         qsock.set_read_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         // Init PTY shell
 
-        let mut proc = pty::new(opts.exec.as_str())?;
-        let reader = proc.pair.master.try_clone_reader()?;
-        let writer = proc.pair.master.try_clone_writer()?;
+        let master = pty::new(opts.exec.as_str())?;
+        let reader = master.try_clone()?; // master.try_clone_reader()?;
+        let writer = master.try_clone()?; // .try_clone_writer()?;
         let reader = Arc::new(Mutex::new(reader));
         let writer = Arc::new(Mutex::new(writer));
         let qsock = Arc::new(Mutex::new(qsock));
 
         loop {
-            if proc.child.try_wait()?.is_some() {
-                break;
-            }
-            println!("pty -> sock");
             copy_until(reader.clone(), qsock.clone(), TIMEOUT).unwrap_or_default();
-            println!("sock -> pty");
             copy_until(qsock.clone(), writer.clone(), TIMEOUT).unwrap_or_default();
         }
     }
@@ -88,10 +83,8 @@ where
     let (sender, receiver) = std::sync::mpsc::channel();
     let t = thread::spawn(move || {
         let mut buf = vec![0; 4096];
-        println!("Reading...");
         let n = reader.lock().unwrap().read(&mut buf).unwrap_or(0);
         if n != 0 {
-            println!("Writing...");
             writer
                 .lock()
                 .unwrap()
@@ -103,9 +96,6 @@ where
     drop(t);
     match receiver.recv_timeout(Duration::from_millis(dur)) {
         Ok(n) => Ok(n),
-        Err(e) => {
-            println!("Error: {}", e);
-            Err(anyhow!(e))
-        }
+        Err(e) => Err(anyhow!(e)),
     }
 }
