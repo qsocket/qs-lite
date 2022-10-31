@@ -10,7 +10,10 @@ use std::time;
 use std::time::Duration;
 
 mod options;
-mod pty;
+#[cfg(not(target_os = "windows"))]
+mod pty_nix;
+#[cfg(target_os = "windows")]
+mod pty_win;
 mod utils;
 
 #[cfg(target_os = "windows")]
@@ -21,6 +24,7 @@ const TIMEOUT: u64 = 50;
 
 fn main() -> Result<(), anyhow::Error> {
     let mut opts = options::parse_options()?;
+    // unsafe { utils::QUIET = opts.quiet };
 
     if opts.generate {
         opts.secret = utils::random_secret();
@@ -57,14 +61,21 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
         qsock.set_read_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         // Init PTY shell
 
-        let master = pty::new(opts.exec.as_str())?;
-        let reader = master.try_clone()?; // master.try_clone_reader()?;
-        let writer = master.try_clone()?; // .try_clone_writer()?;
-        let reader = Arc::new(Mutex::new(reader));
-        let writer = Arc::new(Mutex::new(writer));
+        #[cfg(target_os = "windows")]
+        let pty = pty_win::new(opts.exec.as_str())?;
+        #[cfg(not(target_os = "windows"))]
+        let pty = pty_nix::new(opts.exec.as_str())?;
+
+        // let reader = master.try_clone()?; // master.try_clone_reader()?;
+        // let writer = master.try_clone()?; // .try_clone_writer()?;
+        let reader = Arc::new(Mutex::new(pty.reader));
+        let writer = Arc::new(Mutex::new(pty.writer));
         let qsock = Arc::new(Mutex::new(qsock));
 
         loop {
+            // if !pty.is_alive() {
+            //     break;
+            // }
             copy_until(reader.clone(), qsock.clone(), TIMEOUT).unwrap_or_default();
             copy_until(qsock.clone(), writer.clone(), TIMEOUT).unwrap_or_default();
         }

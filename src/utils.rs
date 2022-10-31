@@ -3,6 +3,7 @@ use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::io::{self, BufRead, Write};
 
+// pub static mut QUIET: bool = false;
 // pub fn new_record_file_name(s: &str) -> Result<String, anyhow::Error> {
 //     let digest = md5::compute(s);
 //     let uuid = Uuid::parse_str(&format!("{:x}", digest))?;
