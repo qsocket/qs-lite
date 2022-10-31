@@ -25,39 +25,29 @@ OPTIONS:
 \t-s, --secret <string>  Secret. (e.g. password)
 ";
 
-// #[derive(StructOpt, Debug)]
-// #[structopt(name = "basic")]
 pub struct Options {
     /// Disable output.
-    // #[structopt(short, long)]
     pub quiet: bool,
 
     /// Verbose output mode.
-    // #[structopt(short, long)]
     pub verbose: bool,
 
     /// Verbose output mode.
-    // #[structopt(short, long)]
     pub generate: bool,
 
     /// Probe interval for calling QSRN.
-    // #[structopt(short, long, default_value = "5")]
     pub probe: i32,
 
     /// Disable TLS encryption.
-    // #[structopt(short, long)]
     pub no_tls: bool,
 
     /// Enable certificate fingerprint verification on TLS connections.
-    // #[structopt(short, long)]
     pub verify_cert: bool,
 
     /// Secret. (e.g. password).
-    // #[structopt(short, long)]
     pub secret: String,
 
     /// Program to execute.
-    // #[structopt(short, long, default_value = DEFAULT_SHELL)]
     pub exec: String,
 }
 
@@ -104,6 +94,7 @@ pub fn parse_options() -> Result<Options, anyhow::Error> {
             exit(0x1);
         }
     }
+
     Ok(opts)
 }
 
