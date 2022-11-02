@@ -10,12 +10,6 @@ pub struct Pty {
     pub writer: std::fs::File,
 }
 
-// impl Pty {
-//     pub fn is_alive(&mut self) -> bool {
-//         self.reader.metadata().is_ok() && self.writer.metadata().is_ok()
-//     }
-// }
-
 pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
     let ws = pty::Winsize {
         ws_row: 30,

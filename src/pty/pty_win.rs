@@ -6,12 +6,6 @@ pub struct Pty {
     pub writer: Box<dyn std::io::Write + Send>,
 }
 
-// impl Pty {
-//     pub fn is_alive(&mut self) -> bool {
-//         self.child.try_wait().is_ok()
-//     }
-// }
-
 pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
     // Init PTY shell
     let pty_system = native_pty_system();

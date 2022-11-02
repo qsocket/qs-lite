@@ -10,10 +10,7 @@ use std::time;
 use std::time::Duration;
 
 mod options;
-#[cfg(not(target_os = "windows"))]
-mod pty_nix;
-#[cfg(target_os = "windows")]
-mod pty_win;
+mod pty;
 mod utils;
 
 #[cfg(target_os = "windows")]
@@ -60,11 +57,7 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
         qsock.set_write_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         qsock.set_read_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         // Init PTY shell
-
-        #[cfg(target_os = "windows")]
-        let pty = pty_win::new(opts.exec.as_str())?;
-        #[cfg(not(target_os = "windows"))]
-        let pty = pty_nix::new(opts.exec.as_str())?;
+        let pty = pty::new(opts.exec.as_str())?;
 
         // let reader = master.try_clone()?; // master.try_clone_reader()?;
         // let writer = master.try_clone()?; // .try_clone_writer()?;
