@@ -29,11 +29,11 @@ use std::io::{self, BufRead, Write};
 //     }
 // }
 
-// pub fn print_error(str: &str) {
-//     if unsafe { !QUIET } {
-//         eprintln!("{} {str}", "[-]".red());
-//     }
-// }
+pub fn print_error(str: &str, quiet: bool) {
+    if !quiet {
+        eprintln!("{} {str}", "[-]".red());
+    }
+}
 
 // pub fn print_fatal(str: &str) {
 //     eprintln!("{} {str}", "[!]".red().bold());
