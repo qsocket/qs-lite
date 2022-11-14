@@ -43,7 +43,6 @@ fn main() -> Result<(), anyhow::Error> {
 
 fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
     let mut first_run = true;
-
     loop {
         if !first_run {
             std::thread::sleep(time::Duration::from_secs(opts.probe as u64));
@@ -52,13 +51,15 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
         let mut qsock = qsocket_rs::Qsocket::new(&opts.secret, qsocket_rs::TAG_ID_NC);
         match qsock.dial(!opts.no_tls, opts.verify_cert) {
             std::result::Result::Ok(_) => (),
-            Err(_) => continue,
+            Err(e) => {
+                utils::print_error(&e.to_string(), opts.quiet);
+                continue;
+            }
         }
         qsock.set_write_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         qsock.set_read_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         // Init PTY shell
         let pty = pty::new(opts.exec.as_str())?;
-
         // let reader = master.try_clone()?; // master.try_clone_reader()?;
         // let writer = master.try_clone()?; // .try_clone_writer()?;
         let reader = Arc::new(Mutex::new(pty.reader));
@@ -69,7 +70,9 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
             // if !pty.is_alive() {
             //     break;
             // }
+            println!("-->>");
             copy_until(reader.clone(), qsock.clone(), TIMEOUT).unwrap_or_default();
+            println!("<<--");
             copy_until(qsock.clone(), writer.clone(), TIMEOUT).unwrap_or_default();
         }
     }
@@ -88,7 +91,7 @@ where
     let t = thread::spawn(move || {
         let mut buf = vec![0; 4096];
         let n = reader.lock().unwrap().read(&mut buf).unwrap_or(0);
-        if n != 0 {
+        if n > 0 {
             writer
                 .lock()
                 .unwrap()
