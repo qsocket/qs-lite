@@ -3,7 +3,7 @@ use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 pub struct Pty {
     pub child: Box<dyn portable_pty::Child + std::marker::Send + std::marker::Sync>,
     pub reader: Box<dyn std::io::Read + Send>,
-    pub writer: Box<dyn std::io::Write + Send>,
+    pub writer: Box<dyn portable_pty::MasterPty + Send>,
 }
 
 pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
@@ -29,7 +29,7 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
     Ok(Pty {
         child,
         reader: pair.master.try_clone_reader()?,
-        writer: pair.master.try_clone_writer()?,
+        writer: pair.master,
     })
 }
 
@@ -38,7 +38,34 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
 // use std::io::{Read, Write};
 // use winptyrs::{AgentConfig, MouseMode, PTYArgs, PTY};
 
-// pub fn new(command: &str) -> Result<Ptx<PTY>, anyhow::Error> {
+// impl Write for Pty {
+//     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+//         match &self.writer.write(buf) {
+//             Ok(n) => Ok(n),
+//             Err(e) => Err(anyhow::anyhow!(e)),
+//         }
+//     }
+
+//     fn flush(&mut self) -> std::io::Result<()> {
+//         Ok(())
+//     }
+// }
+// impl Read for Pty {
+//     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+//         match &self.writer.read(buf.len(), false) {
+//             Ok(foo) => buf = foo,
+//             Err(e) => Err(anyhow::anyhow!(e)),
+//         }
+//     }
+// }
+
+// pub struct Pty {
+//     pub child: PTY,
+//     pub reader: PTY,
+//     pub writer: PTY,
+// }
+
+// pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
 //     let cmd = OsString::from(command);
 //     let pty_args = PTYArgs {
 //         cols: 80,
@@ -49,7 +76,11 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
 //     };
 
 //     // Initialize a pseudoterminal.
-//     let mut pty = PTY::new(&pty_args)?;
+//     let mut pty = PTY::new(&pty_args).unwrap();
 
-//     Ok(Ptx { master: pty })
+//     Ok(Pty {
+//         child: pty,
+//         reader: pty,
+//         writer: pty,
+//     })
 // }
