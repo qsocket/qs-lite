@@ -1,8 +1,6 @@
 //#![windows_subsystem = "windows"]
 
 use anyhow::anyhow;
-// use anyhow::Result;
-// use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use std::io::prelude::*;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -13,10 +11,6 @@ mod options;
 mod pty;
 mod utils;
 
-#[cfg(target_os = "windows")]
-const TIMEOUT: u64 = 2000;
-
-#[cfg(not(target_os = "windows"))]
 const TIMEOUT: u64 = 50;
 
 fn main() -> Result<(), anyhow::Error> {
@@ -56,6 +50,8 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
                 continue;
             }
         }
+        #[cfg(target_os = "windows")]
+        qsock.set_nonblocking(true)?;
         qsock.set_write_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         qsock.set_read_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         // Init PTY shell
@@ -70,15 +66,13 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
             // if !pty.is_alive() {
             //     break;
             // }
-            println!("-->>");
             copy_until(reader.clone(), qsock.clone(), TIMEOUT).unwrap_or_default();
-            println!("<<--");
             copy_until(qsock.clone(), writer.clone(), TIMEOUT).unwrap_or_default();
         }
     }
 }
 
-fn copy_until<S, D>(
+pub fn copy_until<S, D>(
     reader: Arc<Mutex<S>>,
     writer: Arc<Mutex<D>>,
     dur: u64,
