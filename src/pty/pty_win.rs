@@ -34,53 +34,22 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
 }
 
 // ============================================================================
-// use std::ffi::OsString;
-// use std::io::{Read, Write};
-// use winptyrs::{AgentConfig, MouseMode, PTYArgs, PTY};
-
-// impl Write for Pty {
-//     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-//         match &self.writer.write(buf) {
-//             Ok(n) => Ok(n),
-//             Err(e) => Err(anyhow::anyhow!(e)),
-//         }
-//     }
-
-//     fn flush(&mut self) -> std::io::Result<()> {
-//         Ok(())
-//     }
-// }
-// impl Read for Pty {
-//     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-//         match &self.writer.read(buf.len(), false) {
-//             Ok(foo) => buf = foo,
-//             Err(e) => Err(anyhow::anyhow!(e)),
-//         }
-//     }
-// }
 
 // pub struct Pty {
-//     pub child: PTY,
-//     pub reader: PTY,
-//     pub writer: PTY,
+//     pub child: conpty::Process,
+//     pub reader: conpty::io::PipeReader,
+//     pub writer: conpty::io::PipeWriter,
 // }
 
 // pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
-//     let cmd = OsString::from(command);
-//     let pty_args = PTYArgs {
-//         cols: 80,
-//         rows: 25,
-//         mouse_mode: MouseMode::WINPTY_MOUSE_MODE_NONE,
-//         timeout: 10000,
-//         agent_config: AgentConfig::WINPTY_FLAG_COLOR_ESCAPES,
-//     };
+//     let proc = conpty::spawn(command)?;
 
-//     // Initialize a pseudoterminal.
-//     let mut pty = PTY::new(&pty_args).unwrap();
+//     let ptyin = proc.input()?;
+//     let ptyout = proc.output()?;
 
 //     Ok(Pty {
-//         child: pty,
-//         reader: pty,
-//         writer: pty,
+//         child: proc,
+//         reader: ptyout,
+//         writer: ptyin,
 //     })
 // }
