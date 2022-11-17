@@ -14,7 +14,8 @@ colored = "2.0.0"
 rand = "0.8.5"
 rustls = { version = "0.20.6", features = ["dangerous_configuration"] }
 nix = "0.25.0"
-winpty-rs = "0.3.9"
+
+[target.windows.dependencies]
 portable-pty = "0.7.0"
 
 [dependencies.qsocket-rs]
