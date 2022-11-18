@@ -4,20 +4,24 @@ use std::os::unix::io::FromRawFd;
 use std::os::unix::process::CommandExt;
 use std::process::Command;
 
-// impl Pty {
-//     pub fn wait(&self) -> bool {
-//         loop {
-//             if !std::path::Path::new(&format!("/proc/{}/stat", &self.child)).exists() {
-//                 return false;
-//             }
-//         }
-//     }
-// }
-
 pub struct Pty {
-    // child: u32,
+    pub child: Child,
     pub reader: std::fs::File,
     pub writer: std::fs::File,
+}
+
+pub struct Child {
+    receiver: std::sync::mpsc::Receiver<bool>,
+}
+
+impl Child {
+    pub fn wait(&self) {
+        loop {
+            if self.receiver.recv().is_ok() {
+                return;
+            }
+        }
+    }
 }
 
 pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
@@ -33,16 +37,17 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
         builder.args(&parts[1..]);
     }
     let pty = unsafe { nix::pty::forkpty(Some(&ws), None)? };
-
+    let (sender, receiver) = std::sync::mpsc::channel();
     if pty.fork_result.is_child() {
         builder.exec();
+        sender.send(true)?;
         std::process::exit(0);
     }
 
     if pty.fork_result.is_parent() {
         let master = unsafe { File::from_raw_fd(pty.master) };
         return Ok(Pty {
-            //child: pid,
+            child: Child { receiver },
             reader: master.try_clone()?,
             writer: master.try_clone()?,
         });

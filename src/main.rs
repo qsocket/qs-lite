@@ -46,7 +46,9 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
         match qsock.dial(!opts.no_tls, opts.verify_cert) {
             std::result::Result::Ok(_) => (),
             Err(e) => {
-                utils::print_error(&e.to_string(), opts.quiet);
+                if e.to_string() != qsocket_rs::ERR_KNOCK_FAILED {
+                    utils::print_error(&e.to_string(), opts.quiet);
+                }
                 continue;
             }
         }
@@ -56,21 +58,23 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
         qsock.set_write_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         qsock.set_read_timeout(Some(Duration::from_millis(TIMEOUT)))?;
         // Init PTY shell
-        let pty = pty::new(opts.exec.as_str())?;
-        // let reader = master.try_clone()?; // master.try_clone_reader()?;
-        // let writer = master.try_clone()?; // .try_clone_writer()?;
+        let mut pty = pty::new(opts.exec.as_str())?;
         let reader = Arc::new(Mutex::new(pty.reader));
         let writer = Arc::new(Mutex::new(pty.writer));
         let qsock = Arc::new(Mutex::new(qsock));
+        let (sender, receiver) = std::sync::mpsc::channel();
 
-        loop {
-            // if !pty.is_alive() {
-            //     qsock.lock().unwrap().shutdown(std::net::Shutdown::Both);
-            //     break;
-            // }
+        let t = thread::spawn(move || loop {
+            if receiver.try_recv().is_ok() {
+                let _ = qsock.lock().unwrap().shutdown(std::net::Shutdown::Both);
+                break;
+            }
             copy_until(reader.clone(), qsock.clone(), TIMEOUT).unwrap_or_default();
             copy_until(qsock.clone(), writer.clone(), TIMEOUT).unwrap_or_default();
-        }
+        });
+        pty.child.wait();
+        let _ = sender.send(true);
+        drop(t);
     }
 }
 
