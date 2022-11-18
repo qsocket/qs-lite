@@ -1,10 +1,16 @@
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 
 pub struct Pty {
-    pub child: Box<dyn portable_pty::Child + std::marker::Send + std::marker::Sync>,
+    child: Box<dyn portable_pty::Child + std::marker::Send + std::marker::Sync>,
     pub reader: Box<dyn std::io::Read + Send>,
     pub writer: Box<dyn portable_pty::MasterPty + Send>,
 }
+
+// impl Pty {
+//     pub fn wait(&self) -> IoResult<ExitStatus> {
+//         &self.child.wait()?;
+//     }
+// }
 
 pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
     // Init PTY shell

@@ -50,6 +50,7 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
                 continue;
             }
         }
+
         #[cfg(target_os = "windows")]
         qsock.set_nonblocking(true)?;
         qsock.set_write_timeout(Some(Duration::from_millis(TIMEOUT)))?;
@@ -64,6 +65,7 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
 
         loop {
             // if !pty.is_alive() {
+            //     qsock.lock().unwrap().shutdown(std::net::Shutdown::Both);
             //     break;
             // }
             copy_until(reader.clone(), qsock.clone(), TIMEOUT).unwrap_or_default();
