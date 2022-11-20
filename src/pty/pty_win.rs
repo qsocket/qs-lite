@@ -1,16 +1,16 @@
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 
 pub struct Pty {
-    pub child: MyChild,
+    pub child: PtyChild,
     pub reader: Box<dyn std::io::Read + Send>,
     pub writer: Box<dyn portable_pty::MasterPty + Send>,
 }
 
-pub struct MyChild {
+pub struct PtyChild {
     child: Box<dyn portable_pty::Child + std::marker::Send + std::marker::Sync>,
 }
 
-impl MyChild {
+impl PtyChild {
     pub fn wait(&mut self) {
         let _ = &self.child.wait();
     }
@@ -37,7 +37,7 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
     let child = pair.slave.spawn_command(builder)?;
 
     Ok(Pty {
-        child: MyChild { child: child },
+        child: PtyChild { child: child },
         reader: pair.master.try_clone_reader()?,
         writer: pair.master,
     })
