@@ -63,7 +63,6 @@ fn start_probing_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
         let writer = Arc::new(Mutex::new(pty.writer));
         let qsock = Arc::new(Mutex::new(qsock));
         let (sender, receiver) = std::sync::mpsc::channel();
-
         let t = thread::spawn(move || loop {
             if receiver.try_recv().is_ok() {
                 let _ = qsock.lock().unwrap().shutdown(std::net::Shutdown::Both);
