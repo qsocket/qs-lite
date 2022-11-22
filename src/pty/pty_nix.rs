@@ -1,5 +1,4 @@
 use nix::pty;
-use nix::sys::wait::WaitPidFlag;
 use nix::unistd::Pid;
 use std::fs::File;
 use std::os::unix::io::FromRawFd;
@@ -13,15 +12,12 @@ pub struct Pty {
 }
 
 pub struct Child {
-    pid: u32,
+    pid: i32,
 }
 
 impl Child {
     pub fn wait(&self) {
-        match nix::sys::wait::waitpid(Pid::from_raw(self.pid as i32), Some(WaitPidFlag::WSTOPPED)) {
-            Ok(s) => println!("Wait finished => {:?}", s),
-            Err(e) => println!("WaitPID error: {}", e),
-        };
+        let _ = nix::sys::wait::waitpid(Pid::from_raw(self.pid), None);
     }
 }
 
@@ -38,15 +34,13 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
         builder.args(&parts[1..]);
     }
     let pty = unsafe { nix::pty::forkpty(Some(&ws), None)? };
-    let (sender, receiver) = std::sync::mpsc::channel();
     if pty.fork_result.is_child() {
-        while sender.send(std::process::id()).is_err() {}
         builder.exec();
         std::process::exit(0);
     }
 
     if pty.fork_result.is_parent() {
-        let pid = receiver.recv()?;
+        let pid = -1; // All childs
         let master = unsafe { File::from_raw_fd(pty.master) };
         return Ok(Pty {
             child: Child { pid },
