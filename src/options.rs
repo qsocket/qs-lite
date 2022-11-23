@@ -49,6 +49,9 @@ pub struct Options {
 
     /// Program to execute.
     pub exec: String,
+
+    /// TCP Forwarding address
+    pub forward_addr: String,
 }
 
 pub fn parse_options() -> Result<Options, anyhow::Error> {
@@ -61,6 +64,7 @@ pub fn parse_options() -> Result<Options, anyhow::Error> {
         verify_cert: false,
         secret: "".to_string(),
         exec: DEFAULT_SHELL.to_string(),
+        forward_addr: "".to_string(),
     };
 
     let mut args: Vec<String> = vec!["qs-lite".to_string()];
@@ -77,6 +81,8 @@ pub fn parse_options() -> Result<Options, anyhow::Error> {
             opts.exec = args[i + 1].to_string();
         } else if (args[i].eq("-s") || args[i].eq("--secret")) && ((i + 1) <= args.len()) {
             opts.secret = args[i + 1].to_string();
+        } else if (args[i].eq("-f") || args[i].eq("--forward")) && ((i + 1) <= args.len()) {
+            opts.forward_addr = args[i + 1].to_string();
         } else if args[i].eq("-n") || args[i].eq("--probe") && ((i + 1) <= args.len()) {
             opts.probe = args[i + 1].to_string().parse::<i32>().unwrap();
         } else if args[i].eq("-g") || args[i].eq("--generate") {
@@ -112,4 +118,8 @@ pub fn summarize_options(opts: &Options) {
     println!("{} TLS: {}", "├──>".yellow(), !opts.no_tls);
     println!("{} Cert. Pinning: {}", "├──>".yellow(), opts.verify_cert);
     println!("{} Probe Interval: {}", "└──>".yellow(), opts.probe);
+    if !opts.forward_addr.is_empty() {
+        println!("{} Forward: {}", "└──>".yellow(), opts.forward_addr);
+    }
+    print!("\n");
 }
