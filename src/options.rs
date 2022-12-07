@@ -5,7 +5,10 @@ use std::process::exit;
 #[cfg(target_os = "windows")]
 const DEFAULT_SHELL: &str = "cmd.exe";
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(target_os = "android")]
+const DEFAULT_SHELL: &str = "sh";
+
+#[cfg(all(not(target_os = "windows"), not(target_os = "android")))]
 const DEFAULT_SHELL: &str = "bash -il";
 
 const HELP_PROMPT: &str = "USAGE:
@@ -23,6 +26,7 @@ OPTIONS:
 \t-e, --exec <string>    Program to execute [default: bash -il]
 \t-p, --probe <int>      Probe interval for calling QSRN [default: 5]
 \t-s, --secret <string>  Secret. (e.g. password)
+\t-f, --forward <string> IP:PORT for TCP forwarding.
 ";
 
 pub struct Options {
