@@ -1,0 +1,27 @@
+[package]
+name = "qs-lite"
+version = "0.1.0"
+edition = "2021"
+authors = ["Ege BALIC <egebalci@pm.me>"]
+description = "Qsocket lite."
+repository = "https://github.com/qsocket/qs-lite"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+anyhow = "1.0.61"
+colored = "2.0.0"
+rand = "0.8.5"
+rustls = { version = "0.20.6", features = ["dangerous_configuration"] }
+nix = "0.25.0"
+qsocket = "*"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+portable-pty = "0.7.0"
+
+[profile.release]
+strip = true  # Automatically strip symbols from the binary.
+lto = true
+opt-level = "z"  # Optimize for size.
+codegen-units = 1
+panic = "abort"
