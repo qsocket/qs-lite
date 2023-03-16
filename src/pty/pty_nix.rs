@@ -1,5 +1,6 @@
 use nix::pty;
 use nix::unistd::Pid;
+use std::env;
 use std::fs::File;
 use std::os::unix::io::FromRawFd;
 use std::os::unix::process::CommandExt;
@@ -30,6 +31,7 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
     };
     let parts = command.split_whitespace().collect::<Vec<&str>>();
     let mut builder = Command::new(parts[0]);
+    builder.env("qs_netcat", env::current_exe()?);
     if command.contains(char::is_whitespace) {
         builder.args(&parts[1..]);
     }

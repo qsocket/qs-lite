@@ -1,4 +1,5 @@
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+use std::env;
 
 pub struct Pty {
     pub child: PtyChild,
@@ -31,6 +32,8 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
 
     let parts = command.split_whitespace().collect::<Vec<&str>>();
     let mut builder = CommandBuilder::new(parts[0]);
+
+    builder.env("qs_netcat", env::current_exe()?);
     if command.contains(char::is_whitespace) {
         builder.args(&parts[1..]);
     }
@@ -42,24 +45,3 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
         writer: pair.master,
     })
 }
-
-// ============================================================================
-
-// pub struct Pty {
-//     pub child: conpty::Process,
-//     pub reader: conpty::io::PipeReader,
-//     pub writer: conpty::io::PipeWriter,
-// }
-
-// pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
-//     let proc = conpty::spawn(command)?;
-
-//     let ptyin = proc.input()?;
-//     let ptyout = proc.output()?;
-
-//     Ok(Pty {
-//         child: proc,
-//         reader: ptyout,
-//         writer: ptyin,
-//     })
-// }

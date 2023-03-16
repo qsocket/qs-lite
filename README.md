@@ -62,15 +62,6 @@ qs-mic supports 10 architectures and 12 operating systems, check **Supported Pla
 
 </details>
 
-### Docker Install
-
-[![Docker](http://dockeri.co/image/egee/qsocket)](https://hub.docker.com/r/egee/qsocket/)
-
-```bash
-docker pull egee/qsocket
-docker run -it egee/qsocket
-```
-
 ## Usage
 ```
 qs-lite 1.0

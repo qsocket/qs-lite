@@ -26,7 +26,7 @@ netbsd:
 # ${BUILD} --target x86_64-unknown-netbsd
 android:
 	${CROSS} --target aarch64-linux-android
-	${BUILD} --target x86_64-linux-android
+	${CROSS} --target x86_64-linux-android
 ios:
 # ${BUILD} --target aarch64-apple-ios
 # ${BUILD} --target aarch64-apple-ios-sim

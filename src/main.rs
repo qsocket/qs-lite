@@ -36,7 +36,7 @@ fn main() -> Result<(), anyhow::Error> {
         match probe_qsrn(&opts) {
             Ok(_) => (),
             Err(e) => {
-                if e.to_string() != qsocket_rs::ERR_KNOCK_FAILED {
+                if e.to_string() != qsocket::ERR_KNOCK_FAILED {
                     utils::print_error(&e.to_string(), opts.quiet);
                 }
             }
@@ -46,7 +46,7 @@ fn main() -> Result<(), anyhow::Error> {
 } // the stream is closed here
 
 fn forward_traffic(
-    qsock: &mut qsocket_rs::Qsocket,
+    qsock: &mut qsocket::QSocket,
     opts: &options::Options,
 ) -> Result<(), anyhow::Error> {
     let mut sock = std::net::TcpStream::connect(opts.forward_addr.as_str())?;
@@ -88,38 +88,21 @@ fn forward_traffic(
             }
         }
     }
-
-    // thread::spawn(move || loop {
-    //     match std::io::copy(&mut *qs1.lock().unwrap(), &mut s1) {
-    //         Ok(_) => (),
-    //         Err(e) => {
-    //             if !e.to_string().contains("os error 11") {
-    //                 println!("{}", e);
-    //                 return abort1.lock().unwrap().send(true);
-    //             }
-    //         }
-    //     }
-    // });
-
-    // thread::spawn(move || loop {
-    //     match std::io::copy(&mut s2, &mut *qs2.lock().unwrap()) {
-    //         Ok(_) => (),
-    //         Err(e) => {
-    //             if !e.to_string().contains("os error 11") {
-    //                 println!("{}", e);
-    //                 return abort2.lock().unwrap().send(true);
-    //             }
-    //         }
-    //     };
-    // });
-
-    // let _ = receiver.recv();
     Ok(())
 }
 
 fn probe_qsrn(opts: &options::Options) -> Result<(), anyhow::Error> {
-    let mut qsock = qsocket_rs::Qsocket::new(&opts.secret, qsocket_rs::TAG_ID_NC);
-    qsock.dial(!opts.no_tls, opts.verify_cert)?;
+    let mut qsock = qsocket::QSocket::new(&opts.secret, opts.verify_cert);
+    qsock.add_id_tag(qsocket::peer_id_tag::SERVER)?;
+    if !opts.forward_addr.is_empty() {
+        qsock.add_id_tag(qsocket::peer_id_tag::PROXY)?;
+    }
+
+    if opts.no_encryption {
+        qsock.dial_tcp()?;
+    } else {
+        qsock.dial()?;
+    }
     // Check if a forward address is given
     if !opts.forward_addr.is_empty() {
         qsock.set_nonblocking(true)?;

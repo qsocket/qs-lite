@@ -260,14 +260,16 @@ dependencies = [
  "colored",
  "nix",
  "portable-pty",
- "qsocket-rs",
+ "qsocket",
  "rand",
  "rustls",
 ]
 
 [[package]]
-name = "qsocket-rs"
-version = "0.1.0"
+name = "qsocket"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38d78e5315d73103947f714d8e73b8542f7ceb22beb7a75710dabbcd9450c664"
 dependencies = [
  "anyhow",
  "md5",

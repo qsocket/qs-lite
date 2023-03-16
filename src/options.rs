@@ -17,38 +17,48 @@ qs-lite [FLAGS] [OPTIONS]
 FLAGS:
 \t-g, --generate         Verbose output mode
 \t-h, --help             Prints help information
-\t-n, --no-tls           Disable TLS encryption
+\t-C, --no-tls           Disable TLS encryption
 \t-q, --quiet            Disable output
 \t-v, --verbose          Verbose output mode
 \t--pin                  Enable certificate fingerprint verification on TLS connections
 
 OPTIONS:
 \t-e, --exec <string>    Program to execute [default: bash -il]
-\t-p, --probe <int>      Probe interval for calling QSRN [default: 5]
+\t-n, --probe <int>      Probe interval for calling QSRN [default: 5]
 \t-s, --secret <string>  Secret. (e.g. password)
 \t-f, --forward <string> IP:PORT for TCP forwarding.
 ";
+const DEFAULT_E2E_CIPHER: &str = "AES-GCM-SHA-256-E2E";
 
+// #[derive(FromArgs)]
+/// Reach new heights.
 pub struct Options {
-    /// Disable output.
+    /// disable output.p
+    // #[argh(switch, short = 'q')]
     pub quiet: bool,
 
-    /// Verbose output mode.
+    /// verbose output mode.
+    // #[argh(switch, short = 'v')]
     pub verbose: bool,
 
-    /// Verbose output mode.
+    /// verbose output mode.
+    // #[argh(switch, short = 'g')]
     pub generate: bool,
 
-    /// Probe interval for calling QSRN.
+    /// probe interval for calling QSRN.
+    // #[argh(option, short = 't', default = 5)]
     pub probe: i32,
 
-    /// Disable TLS encryption.
-    pub no_tls: bool,
+    /// disable TLS+E2E encryption.
+    // #[argh(switch, short = 'C')]
+    pub no_encryption: bool,
 
-    /// Enable certificate fingerprint verification on TLS connections.
+    /// enable certificate fingerprint verification on TLS connections.
+    // #[argh(switch, name = "pin")]
     pub verify_cert: bool,
 
-    /// Secret. (e.g. password).
+    /// secret. (e.g. password).
+    // #[argh(option, short = 's')]
     pub secret: String,
 
     /// Program to execute.
@@ -64,7 +74,7 @@ pub fn parse_options() -> Result<Options, anyhow::Error> {
         verbose: false,
         generate: false,
         probe: 5,
-        no_tls: false,
+        no_encryption: false,
         verify_cert: false,
         secret: "".to_string(),
         exec: DEFAULT_SHELL.to_string(),
@@ -91,8 +101,8 @@ pub fn parse_options() -> Result<Options, anyhow::Error> {
             opts.probe = args[i + 1].to_string().parse::<i32>().unwrap();
         } else if args[i].eq("-g") || args[i].eq("--generate") {
             opts.generate = true;
-        } else if args[i].eq("-C") || args[i].eq("--no-tls") {
-            opts.no_tls = true;
+        } else if args[i].eq("-C") || args[i].eq("--nocipher") {
+            opts.no_encryption = true;
         } else if args[i].eq("--pin") {
             opts.verify_cert = true;
         } else if args[i].eq("-q") || args[i].eq("--quiet") {
@@ -118,12 +128,17 @@ pub fn summarize_options(opts: &Options) {
         "[#]".yellow().bold(),
         ".:: Qsocket Lite ::.".blue().bold()
     );
-    println!("{} Secret: {}", "├──>".yellow(), opts.secret.red());
-    println!("{} TLS: {}", "├──>".yellow(), !opts.no_tls);
-    println!("{} Cert. Pinning: {}", "├──>".yellow(), opts.verify_cert);
-    println!("{} Probe Interval: {}", "└──>".yellow(), opts.probe);
+    println!("{} Secret: {}", " ├──>".yellow(), opts.secret.red());
+    println!("{} Cert. Pinning: {}", " ├──>".yellow(), opts.verify_cert);
+    println!("{} Probe Interval: {}", " ├──>".yellow(), opts.probe);
     if !opts.forward_addr.is_empty() {
-        println!("{} Forward: {}", "└──>".yellow(), opts.forward_addr);
+        println!("{} Forward: {}", " ├──>".yellow(), opts.forward_addr);
     }
-    print!("\n");
+    if opts.no_encryption {
+        println!("{} Encryption: {}", " └──>".yellow(), "DISABLED".red().bold());
+    }else{
+        println!("{} Encryption: {}", " └──>".yellow(), DEFAULT_E2E_CIPHER);
+    }
+
+    println!();
 }
