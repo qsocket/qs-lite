@@ -1,6 +1,6 @@
 use nix::pty;
 use nix::unistd::Pid;
-use std::env;
+use std::{env, io};
 use std::fs::File;
 use std::os::unix::io::FromRawFd;
 use std::os::unix::process::CommandExt;
@@ -22,7 +22,7 @@ impl Child {
     }
 }
 
-pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
+pub fn new(command: &str) -> Result<Pty, std::io::Error> {
     let ws = pty::Winsize {
         ws_row: 30,
         ws_col: 120,
@@ -51,5 +51,5 @@ pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
         });
     }
 
-    Err(anyhow::anyhow!("PTY creation failed!"))
+    Err(io::ErrorKind::Other.into())
 }

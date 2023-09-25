@@ -1,6 +1,7 @@
+use clap::Parser;
 use colored::Colorize;
-use std::env;
-use std::process::exit;
+use std::net::SocketAddr;
+use thiserror::Error;
 
 #[cfg(target_os = "windows")]
 const DEFAULT_SHELL: &str = "cmd.exe";
@@ -11,108 +12,111 @@ const DEFAULT_SHELL: &str = "sh";
 #[cfg(all(not(target_os = "windows"), not(target_os = "android")))]
 const DEFAULT_SHELL: &str = "bash -il";
 
-const HELP_PROMPT: &str = "USAGE:
-qs-lite [FLAGS] [OPTIONS]
+const DEFAULT_E2E_CIPHER: &str = "AES-GCM-SHA-256-E2E (Prime: 4096)";
 
-FLAGS:
-\t-g, --generate         Verbose output mode
-\t-h, --help             Prints help information
-\t-C, --no-tls           Disable TLS encryption
-\t-q, --quiet            Disable output
-\t-v, --verbose          Verbose output mode
-\t--pin                  Enable certificate fingerprint verification on TLS connections
+#[derive(Error, Debug)]
+pub enum ArgParseError {
+    #[error("Invalid forward address")]
+    ForwardAddress,
+    #[error("Invalid proxy address")]
+    ProxyAddress,
+    #[error("Invalid TLS certificate fingerprint")]
+    CertificateFingerprint,
+}
 
-OPTIONS:
-\t-e, --exec <string>    Program to execute [default: bash -il]
-\t-n, --probe <int>      Probe interval for calling QSRN [default: 5]
-\t-s, --secret <string>  Secret. (e.g. password)
-\t-f, --forward <string> IP:PORT for TCP forwarding.
-";
-const DEFAULT_E2E_CIPHER: &str = "AES-GCM-SHA-256-E2E";
-
-// #[derive(FromArgs)]
-/// Reach new heights.
+/// QSocket toolkit options.
+#[derive(Parser, Debug)]
+#[command(name = "QSocket Lite")]
+#[command(version = "1.0.2")]
+#[command(about = "QSocket Toolkit.", long_about = None)]
 pub struct Options {
-    /// disable output.p
-    // #[argh(switch, short = 'q')]
+    /// secret. (e.g. password).
+    #[arg(long, short = 's', default_value_t = String::new())]
+    pub secret: String,
+
+    /// program to execute.
+    #[arg(long, short = 'e', default_value_t = DEFAULT_SHELL.to_string())]
+    pub exec: String,
+
+    /// forward address (IP:PORT) for traffic forwarding.
+    #[arg(long, short = 'f', default_value_t = String::new())]
+    pub forward_addr: String,
+
+    /// user socks proxy address for connecting QSRN.
+    #[arg(long, short = 'x', default_value_t = String::new())]
+    pub proxy_addr: String,
+
+    /// hex encoded TLS certificate fingerprint for validation.
+    #[arg(long, short = 'X', default_value_t = String::new())]
+    pub cert_fingerprint: String,
+
+    /// probe interval for connecting QSRN.
+    #[arg(long, short = 'n', default_value_t = 5)]
+    pub probe: u64,
+
+    /// disable all (TLS+E2E) encryption.
+    #[arg(long, short = 'C')]
+    pub no_encryption: bool,
+
+    /// disable End-to-End encryption.
+    #[arg(long)]
+    pub no_e2e: bool,
+
+    /// initiate a full PTY (interactive) shell.
+    #[arg(long, short)]
+    pub interactive: bool,
+
+    /// server mode. (listen for connections)
+    #[arg(long, short = 'l')]
+    pub listen: bool,
+
+    /// generate a random secret.
+    #[arg(long, short = 'g')]
+    pub generate: bool,
+
+    /// use TOR network for connecting QSRN.
+    #[arg(long, short = 'T')]
+    pub use_tor: bool,
+
+    /// generate a QR code with given stdin and print on the terminal.
+    #[arg(long)]
+    pub qr: bool,
+
+    /// quiet mode. (no stdout)
+    #[arg(long, short = 'q')]
     pub quiet: bool,
 
     /// verbose output mode.
-    // #[argh(switch, short = 'v')]
+    #[arg(long, short = 'v')]
     pub verbose: bool,
-
-    /// verbose output mode.
-    // #[argh(switch, short = 'g')]
-    pub generate: bool,
-
-    /// probe interval for calling QSRN.
-    // #[argh(option, short = 't', default = 5)]
-    pub probe: i32,
-
-    /// disable TLS+E2E encryption.
-    // #[argh(switch, short = 'C')]
-    pub no_encryption: bool,
-
-    /// enable certificate fingerprint verification on TLS connections.
-    // #[argh(switch, name = "pin")]
-    pub verify_cert: bool,
-
-    /// secret. (e.g. password).
-    // #[argh(option, short = 's')]
-    pub secret: String,
-
-    /// Program to execute.
-    pub exec: String,
-
-    /// TCP Forwarding address
-    pub forward_addr: String,
 }
 
-pub fn parse_options() -> Result<Options, anyhow::Error> {
-    let mut opts: Options = Options {
-        quiet: false,
-        verbose: false,
-        generate: false,
-        probe: 5,
-        no_encryption: false,
-        verify_cert: false,
-        secret: "".to_string(),
-        exec: DEFAULT_SHELL.to_string(),
-        forward_addr: "".to_string(),
-    };
+pub fn parse_options() -> Result<Options, ArgParseError> {
+    // let mut opts: Options = argh::from_env();
+    let mut opts = Options::parse();
 
-    let mut args: Vec<String> = vec!["qs-lite".to_string()];
-    if let Ok(env_var) = env::var("QS_ARGS") {
-        for var in env_var.split_whitespace() {
-            args.append(vec![var.to_string()].as_mut());
-        }
-    } else {
-        args = env::args().collect();
+    if opts.use_tor {
+        opts.proxy_addr = String::from("127.0.0.1:9050");
     }
-
-    for i in 0..args.len() {
-        if args[i].eq("-e") || args[i].eq("--exec") && ((i + 1) <= args.len()) {
-            opts.exec = args[i + 1].to_string();
-        } else if (args[i].eq("-s") || args[i].eq("--secret")) && ((i + 1) <= args.len()) {
-            opts.secret = args[i + 1].to_string();
-        } else if (args[i].eq("-f") || args[i].eq("--forward")) && ((i + 1) <= args.len()) {
-            opts.forward_addr = args[i + 1].to_string();
-        } else if args[i].eq("-n") || args[i].eq("--probe") && ((i + 1) <= args.len()) {
-            opts.probe = args[i + 1].to_string().parse::<i32>().unwrap();
-        } else if args[i].eq("-g") || args[i].eq("--generate") {
-            opts.generate = true;
-        } else if args[i].eq("-C") || args[i].eq("--nocipher") {
-            opts.no_encryption = true;
-        } else if args[i].eq("--pin") {
-            opts.verify_cert = true;
-        } else if args[i].eq("-q") || args[i].eq("--quiet") {
-            opts.quiet = true;
-        } else if args[i].eq("-v") || args[i].eq("--verbose") {
-            opts.verbose = true;
-        } else if args[i].eq("-h") {
-            println!("{}", HELP_PROMPT);
-            exit(0x1);
+    // Check if the proxy address if valid
+    if !opts.proxy_addr.is_empty() && opts.proxy_addr.parse::<SocketAddr>().is_err() {
+        return Err(ArgParseError::ProxyAddress);
+    }
+    // Check if the forward address if valid
+    if !opts.forward_addr.is_empty() && opts.forward_addr.parse::<SocketAddr>().is_err() {
+        let parts: Vec<&str> = opts.forward_addr.split(':').collect();
+        if parts.len() != 3
+            || parts[0].to_string().parse::<i32>().is_err()
+            || format!("{}:{}", parts[1], parts[2])
+                .parse::<SocketAddr>()
+                .is_err()
+        {
+            return Err(ArgParseError::ForwardAddress);
         }
+    }
+    // Check if the certificate fingerprint is valid
+    if !opts.cert_fingerprint.is_empty() && hex::decode(&opts.cert_fingerprint).is_err() {
+        return Err(ArgParseError::CertificateFingerprint);
     }
 
     Ok(opts)
@@ -122,23 +126,35 @@ pub fn summarize_options(opts: &Options) {
     if opts.quiet {
         return;
     }
+    let mut mode = String::from("client");
+    let mut enc_mode = DEFAULT_E2E_CIPHER.to_string();
+
+    if opts.listen {
+        mode = String::from("server");
+    }
+    if opts.no_encryption {
+        enc_mode = "DISABLED".red().bold().to_string();
+    } else if opts.no_e2e {
+        enc_mode = String::from("TLS");
+    }
 
     println!(
         "{} {}",
         "[#]".yellow().bold(),
-        ".:: Qsocket Lite ::.".blue().bold()
+        ".:: QSocket Lite ::.".blue().bold()
     );
     println!("{} Secret: {}", " ├──>".yellow(), opts.secret.red());
-    println!("{} Cert. Pinning: {}", " ├──>".yellow(), opts.verify_cert);
+    println!("{} Mode: {}", " ├──>".yellow(), mode);
+    if !opts.cert_fingerprint.is_empty() {
+        println!("{} Cert. Pinning: true", " ├──>".yellow());
+    }
     println!("{} Probe Interval: {}", " ├──>".yellow(), opts.probe);
+    if !opts.proxy_addr.is_empty() {
+        println!("{} Proxy: {}", " ├──>".yellow(), opts.proxy_addr);
+    }
     if !opts.forward_addr.is_empty() {
         println!("{} Forward: {}", " ├──>".yellow(), opts.forward_addr);
     }
-    if opts.no_encryption {
-        println!("{} Encryption: {}", " └──>".yellow(), "DISABLED".red().bold());
-    }else{
-        println!("{} Encryption: {}", " └──>".yellow(), DEFAULT_E2E_CIPHER);
-    }
-
+    println!("{} Encryption: {}", " └──>".yellow(), enc_mode);
     println!();
 }

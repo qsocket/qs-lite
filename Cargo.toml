@@ -1,6 +1,6 @@
 [package]
 name = "qs-lite"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Ege BALCI <egebalci@pm.me>"]
 description = "QSocket liteweight beacon."
@@ -14,7 +14,17 @@ colored = "2.0.0"
 rand = "0.8.5"
 rustls = { version = "0.20.6", features = ["dangerous_configuration"] }
 nix = "0.25.0"
+hex = "0.4.3"
+thiserror = "1.0.48"
+termion = "2.0.1"
+log = "0.4.20"
+qr2term = "0.3.1"
+spinoff = "0.8.0"
+chrono = "0.4.30"
+clap = { version = "4.4.4", features = ["derive"] }
 # qsocket = "*"
+# argh = "0.1.12"
+# ctrlc = "3.4.1"
 
 [dependencies.qsocket]
 path = "../../libs/qsocket-rs"

@@ -17,7 +17,7 @@ impl PtyChild {
     }
 }
 
-pub fn new(command: &str) -> Result<Pty, anyhow::Error> {
+pub fn new(command: &str) -> Result<Pty, std::io::Error> {
     // Init PTY shell
     let pty_system = native_pty_system();
     // Create a new pty

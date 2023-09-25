@@ -1,8 +1,11 @@
 FLAGS=RUSTFLAGS="-C target-feature=+crt-static"
+NIGHTLY_FLAGS=RUSTFLAGS="-C target-feature=+crt-static -Zlocation-detail=none"
 BUILD=cargo build --release
 CROSS=cross build --release
 default:
-	${FLAGS} ${BUILD}
+	${BUILD}
+nightly:
+	${NIGHTLY_FLAGS} ${BUILD}
 windows:
 	${BUILD} --target x86_64-pc-windows-gnu
 	${BUILD} --target i686-pc-windows-gnu
@@ -16,7 +19,7 @@ linux:
 # ${BUILD} --target mips64el-unknown-linux-gnuabi64
 # ${BUILD} --target mipsel-unknown-linux-gnu
 # ${BUILD} --target powerpc-unknown-linux-gnu
-# ${BUILD} --target powerpc64-unknown-linux-gnu
+# ${BUILD} --target powerpc64-unknown-linux-gn
 # ${BUILD} --target powerpc64le-unknown-linux-gnu
 freebsd:
 	${FLAGS} ${CROSS} --target x86_64-unknown-freebsd
