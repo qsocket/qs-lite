@@ -1,23 +1,20 @@
-//#![windows_subsystem = "windows"]
+// #![windows_subsystem = "windows"]
 use anyhow::anyhow;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 use log::{error, info, warn, LevelFilter};
 use qsocket::{QSocketError, SocketType};
 use spinoff::*;
-use std::io;
-use std::io::{stdout, Stdout};
+use std::io::ErrorKind;
 use std::net::{TcpListener, TcpStream};
-#[cfg(target_os = "windows")]
-use std::os::fd::AsFd;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-use termion::raw::{IntoRawMode, RawTerminal};
 
 mod options;
 mod pty;
 mod utils;
 
-const TIMEOUT: u64 = 20;
+const TIMEOUT: u64 = 30;
 static LOGGER: utils::Logger = utils::Logger;
 
 fn main() {
@@ -136,30 +133,26 @@ fn connect(opts: &options::Options) -> Result<(), anyhow::Error> {
 }
 
 fn attach(qsock: qsocket::QSocket, interactive: bool) -> Result<(), anyhow::Error> {
-    let mut term: Option<RawTerminal<Stdout>> = None; // stdout().into_raw_mode()?;
     if interactive {
-        term = Some(stdout().into_raw_mode()?);
+        enable_raw_mode()?;
     }
 
-    #[cfg(not(target_os = "windows"))]
-    let tty = termion::get_tty()?;
-    #[cfg(target_os = "windows")]
-    let tty = stdout().as_fd();
+    let tty = pty::get_current_tty()?;
+    let reader = Arc::new(Mutex::new(tty.reader));
+    let writer = Arc::new(Mutex::new(tty.writer));
 
-    let reader = Arc::new(Mutex::new(tty.try_clone()?));
-    let writer = Arc::new(Mutex::new(tty.try_clone()?));
     let qsock = Arc::new(Mutex::new(qsock));
     let (sender, receiver) = std::sync::mpsc::channel();
 
     thread::spawn(move || loop {
         if let Err(e) = utils::copy_until(qsock.clone(), writer.clone(), TIMEOUT) {
-            if e.kind() == io::ErrorKind::BrokenPipe {
+            if e.kind() == ErrorKind::BrokenPipe || e.kind() == ErrorKind::ConnectionAborted {
                 let _ = sender.send(true);
                 break;
             }
         }
         if let Err(e) = utils::copy_until(reader.clone(), qsock.clone(), TIMEOUT) {
-            if e.kind() == io::ErrorKind::BrokenPipe {
+            if e.kind() == ErrorKind::BrokenPipe || e.kind() == ErrorKind::ConnectionAborted {
                 let _ = sender.send(true);
                 break;
             }
@@ -168,8 +161,8 @@ fn attach(qsock: qsocket::QSocket, interactive: bool) -> Result<(), anyhow::Erro
 
     receiver.recv()?;
     warn!("Connection closed.");
-    if interactive && term.is_some() {
-        term.unwrap().suspend_raw_mode()?;
+    if interactive {
+        disable_raw_mode()?;
     }
     Ok(())
 }
@@ -192,14 +185,10 @@ fn probe_qsrn(opts: &options::Options) -> Result<(), QSocketError> {
 
     // Check if a forward address is given
     if qsock.get_forward_addr().is_some() {
-        let _ = forward_traffic(qsock);
-        return Ok(());
+        return forward_traffic(qsock);
     }
 
     // Init PTY shell
-    #[cfg(target_os = "windows")]
-    let mut pty = pty::new(opts.exec.as_str())?;
-    #[cfg(not(target_os = "windows"))]
     let pty = pty::new(opts.exec.as_str())?;
     let reader = Arc::new(Mutex::new(pty.reader));
     let writer = Arc::new(Mutex::new(pty.writer));
@@ -212,18 +201,22 @@ fn probe_qsrn(opts: &options::Options) -> Result<(), QSocketError> {
             break;
         }
         if let Err(e) = utils::copy_until(reader.clone(), qsock.clone(), TIMEOUT) {
-            if e.kind() == io::ErrorKind::BrokenPipe {
+            if e.kind() == ErrorKind::BrokenPipe || e.kind() == ErrorKind::ConnectionAborted {
                 break;
             }
         }
         if let Err(e) = utils::copy_until(qsock.clone(), writer.clone(), TIMEOUT) {
-            if e.kind() == io::ErrorKind::BrokenPipe {
+            if e.kind() == ErrorKind::BrokenPipe || e.kind() == ErrorKind::ConnectionAborted {
                 break;
             }
         }
     });
 
+    #[cfg(not(target_os = "windows"))]
     pty.child.wait();
+    #[cfg(target_os = "windows")]
+    let _ = pty.child.wait(None);
+
     let _ = sender.send(true);
     info!("Session closed.");
     Ok(())

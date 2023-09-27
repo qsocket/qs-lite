@@ -1,47 +1,36 @@
-use portable_pty::{native_pty_system, CommandBuilder, PtySize};
-use std::env;
+use conpty::io::{PipeReader, PipeWriter};
+use conpty::Process;
+use std::io::{stdin, stdout, Stdin, Stdout};
+use std::process::Command;
 
 pub struct Pty {
-    pub child: PtyChild,
-    pub reader: Box<dyn std::io::Read + Send>,
-    pub writer: Box<dyn portable_pty::MasterPty + Send>,
-}
-
-pub struct PtyChild {
-    child: Box<dyn portable_pty::Child + std::marker::Send + std::marker::Sync>,
-}
-
-impl PtyChild {
-    pub fn wait(&mut self) {
-        let _ = &self.child.wait();
-    }
+    pub child: Process,
+    pub reader: PipeReader,
+    pub writer: PipeWriter,
 }
 
 pub fn new(command: &str) -> Result<Pty, std::io::Error> {
-    // Init PTY shell
-    let pty_system = native_pty_system();
-    // Create a new pty
-    let pair = pty_system
-        .openpty(PtySize {
-            rows: 30,
-            cols: 120,
-            pixel_width: 0,
-            pixel_height: 0,
-        })
-        .unwrap();
-
-    let parts = command.split_whitespace().collect::<Vec<&str>>();
-    let mut builder = CommandBuilder::new(parts[0]);
-
-    builder.env("qs_netcat", env::current_exe()?);
-    if command.contains(char::is_whitespace) {
-        builder.args(&parts[1..]);
-    }
-    let child = pair.slave.spawn_command(builder)?;
+    let cmd = Command::new(command);
+    let mut child = Process::spawn(cmd)?;
+    let mut reader = child.output()?;
+    let writer = child.input()?;
+    reader.blocking(false);
 
     Ok(Pty {
-        child: PtyChild { child: child },
-        reader: pair.master.try_clone_reader()?,
-        writer: pair.master,
+        child,
+        reader,
+        writer,
+    })
+}
+
+pub struct Tty {
+    pub reader: Stdin,
+    pub writer: Stdout,
+}
+
+pub fn get_current_tty() -> Result<Tty, std::io::Error> {
+    Ok(Tty {
+        reader: stdin(),
+        writer: stdout(),
     })
 }

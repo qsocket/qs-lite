@@ -3,7 +3,7 @@ use colored::Colorize;
 use log::{Level, Metadata, Record};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use std::io::{self, stdin, BufRead, Read, Write};
+use std::io::{self, stdin, BufRead, ErrorKind, Read, Write};
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -90,12 +90,11 @@ where
 {
     let (sender, receiver) = std::sync::mpsc::channel();
     thread::spawn(move || {
-        let mut buf = vec![0; 1024];
+        let mut buf = vec![0; 4096];
         let n = match reader.lock().unwrap().read(&mut buf) {
             Ok(n) => n,
             Err(e) => return sender.send(Err(e)),
         };
-
         if let Err(e) = writer.lock().unwrap().write_all(&buf[..n]) {
             return sender.send(Err(e));
         }
@@ -118,13 +117,13 @@ where
     let (sender, receiver) = std::sync::mpsc::channel();
     thread::spawn(move || loop {
         if let Err(e) = copy_until(p1.clone(), p2.clone(), 20) {
-            if e.kind() == io::ErrorKind::BrokenPipe {
+            if e.kind() == ErrorKind::BrokenPipe || e.kind() == ErrorKind::ConnectionAborted {
                 let _ = sender.send(e);
                 break;
             }
         }
         if let Err(e) = copy_until(p2.clone(), p1.clone(), 20) {
-            if e.kind() == io::ErrorKind::BrokenPipe {
+            if e.kind() == ErrorKind::BrokenPipe || e.kind() == ErrorKind::ConnectionAborted {
                 let _ = sender.send(e);
                 break;
             }
