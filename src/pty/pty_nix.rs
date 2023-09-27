@@ -1,13 +1,19 @@
 use nix::pty;
+use nix::sys::wait::waitpid;
 use nix::unistd::Pid;
-use std::{env, io};
 use std::fs::File;
 use std::os::unix::io::FromRawFd;
 use std::os::unix::process::CommandExt;
 use std::process::Command;
+use std::{env, io};
 
 pub struct Pty {
     pub child: Child,
+    pub reader: std::fs::File,
+    pub writer: std::fs::File,
+}
+
+pub struct Tty {
     pub reader: std::fs::File,
     pub writer: std::fs::File,
 }
@@ -18,7 +24,7 @@ pub struct Child {
 
 impl Child {
     pub fn wait(&self) {
-        let _ = nix::sys::wait::waitpid(Pid::from_raw(self.pid), None);
+        let _ = waitpid(Pid::from_raw(self.pid), None);
     }
 }
 
@@ -52,4 +58,12 @@ pub fn new(command: &str) -> Result<Pty, std::io::Error> {
     }
 
     Err(io::ErrorKind::Other.into())
+}
+
+pub fn get_current_tty() -> Result<Tty, std::io::Error> {
+    let tty = termion::get_tty()?;
+    Ok(Tty {
+        reader: tty.try_clone()?,
+        writer: tty.try_clone()?,
+    })
 }
