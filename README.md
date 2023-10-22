@@ -31,6 +31,9 @@
 
 qs-lite is the lightweight version of [qs-netcat](https://github.com/qsocket/qs-netcat) utility. It allows redirecting true PTY sessions with reverse connections over the [QSRN](qsrn), effectively accessing systems under NAT networks or firewalls.
 
+> [!WARNING]  
+> This tool is in its early alpha development stage, featuring experimental functionality that may lack backwards compatibility, and users are advised to exercise caution and not use it in production environments.
+
 ## Installation
 
 [![Open in Cloud Shell](.github/img/cloud-shell.png)](google-cloud-shell)
