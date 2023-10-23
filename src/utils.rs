@@ -1,13 +1,20 @@
 use chrono::offset::Local;
 use colored::Colorize;
+use core::time;
+use log::warn;
 use log::{Level, Metadata, Record};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::io::{self, stdin, BufRead, ErrorKind, Read, Write};
+use std::sync::atomic::AtomicU8;
+use std::sync::atomic::Ordering::SeqCst;
 use std::sync::mpsc::Receiver;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
+
+#[allow(dead_code)]
+static SIGINT_COUNTER: AtomicU8 = AtomicU8::new(0);
 
 pub struct Logger;
 
@@ -133,16 +140,23 @@ where
     Ok(receiver)
 }
 
-// #[allow(dead_code)]
-// pub fn wait_for_sigint(limit: i8) {
-//     let counter = Arc::new(AtomicI8::new(0));
-//     let counter_clone = counter.clone();
-//     let _ = ctrlc::set_handler(move || {
-//         let count = counter_clone.load(Ordering::SeqCst);
-//         counter_clone.store(count+1, Ordering::SeqCst);
-//         if count == limit-1 {
-//             warn!("Press Ctrl+c one more time to exit.")
-//         }
-//     });
-//     while counter.load(Ordering::SeqCst) < limit {}
-// }
+#[allow(dead_code)]
+pub fn wait_for_sigint(limit: u8) {
+    let _ = ctrlc::set_handler(move || {
+        let mut counter = SIGINT_COUNTER.load(SeqCst);
+        // if counter == limit-1 {
+        //     warn!("")
+        // }
+        if counter == limit {
+            warn!("Exiting...");
+            std::process::exit(0x00);
+        }
+        counter += 1;
+        SIGINT_COUNTER.store(counter, SeqCst);
+    });
+
+    thread::spawn(|| loop {
+        SIGINT_COUNTER.store(0, SeqCst);
+        thread::sleep(time::Duration::from_secs(2));
+    });
+}

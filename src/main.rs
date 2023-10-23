@@ -118,7 +118,6 @@ fn connect(opts: &options::Options) -> Result<(), anyhow::Error> {
         return Err(anyhow!(e));
     }
     qsock.set_nonblocking(true)?;
-
     if local_stream.is_some() {
         spnr.update_text(" Forwarding local traffic...");
         let receiver = utils::bind_stream(qsock, local_stream.unwrap())?;
@@ -137,6 +136,7 @@ fn attach(qsock: qsocket::QSocket, interactive: bool) -> Result<(), anyhow::Erro
         enable_raw_mode()?;
     }
 
+    utils::wait_for_sigint(3);
     let tty = pty::get_current_tty()?;
     let reader = Arc::new(Mutex::new(tty.reader));
     let writer = Arc::new(Mutex::new(tty.writer));
@@ -182,7 +182,7 @@ fn probe_qsrn(opts: &options::Options) -> Result<(), QSocketError> {
     qsock.dial_with(dial_type)?;
     qsock.set_nonblocking(true)?;
     info!("Starting new session...");
-
+    // utils::wait_for_sigint(3);
     // Check if a forward address is given
     if qsock.get_forward_addr().is_some() {
         return forward_traffic(qsock);
@@ -212,13 +212,15 @@ fn probe_qsrn(opts: &options::Options) -> Result<(), QSocketError> {
         }
     });
 
-    #[cfg(not(target_os = "windows"))]
-    pty.child.wait();
-    #[cfg(target_os = "windows")]
-    let _ = pty.child.wait(None);
+    thread::spawn(move || {
+        #[cfg(not(target_os = "windows"))]
+        pty.child.wait();
+        #[cfg(target_os = "windows")]
+        let _ = pty.child.wait(None);
+        let _ = sender.send(true);
+        info!("Session closed.");
+    });
 
-    let _ = sender.send(true);
-    info!("Session closed.");
     Ok(())
 }
 
