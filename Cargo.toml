@@ -23,6 +23,7 @@ clap = { version = "4.4.4", features = ["derive"] }
 crossterm = "0.27.0"
 thiserror = "1.0.49"
 ctrlc = "3.4.1"
+signal-hook = "0.3.17"
 
 [dependencies.qsocket]
 path = "../../libs/qsocket-rs"

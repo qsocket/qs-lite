@@ -144,9 +144,6 @@ where
 pub fn wait_for_sigint(limit: u8) {
     let _ = ctrlc::set_handler(move || {
         let mut counter = SIGINT_COUNTER.load(SeqCst);
-        // if counter == limit-1 {
-        //     warn!("")
-        // }
         if counter == limit {
             warn!("Exiting...");
             std::process::exit(0x00);
@@ -160,3 +157,26 @@ pub fn wait_for_sigint(limit: u8) {
         thread::sleep(time::Duration::from_secs(2));
     });
 }
+
+// #[allow(dead_code)]
+// pub fn wait_for_sigint(limit: u8) -> Result<(), anyhow::Error> {
+//     let mut signals = Signals::new(&[SIGINT])?;
+//     thread::spawn(move || {
+//         for _sig in signals.forever() {
+//             println!("Got new sig: {_sig}");
+//             let mut counter = SIGINT_COUNTER.load(SeqCst);
+//             if counter == limit {
+//                 warn!("Exiting...");
+//                 std::process::exit(0x00);
+//             }
+//             counter += 1;
+//             SIGINT_COUNTER.store(counter, SeqCst);
+//         }
+//     });
+//
+//     thread::spawn(|| loop {
+//         SIGINT_COUNTER.store(0, SeqCst);
+//         thread::sleep(time::Duration::from_secs(2));
+//     });
+//     Ok(())
+// }

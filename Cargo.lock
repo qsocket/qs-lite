@@ -664,6 +664,7 @@ dependencies = [
  "qsocket",
  "rand",
  "rustls",
+ "signal-hook",
  "spinoff",
  "termion",
  "thiserror",

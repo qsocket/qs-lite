@@ -193,32 +193,26 @@ fn probe_qsrn(opts: &options::Options) -> Result<(), QSocketError> {
     let reader = Arc::new(Mutex::new(pty.reader));
     let writer = Arc::new(Mutex::new(pty.writer));
     let qsock = Arc::new(Mutex::new(qsock));
-    let (sender, receiver) = std::sync::mpsc::channel();
+    let mut exit = false;
 
     thread::spawn(move || loop {
-        if receiver.try_recv().is_ok() {
+        if exit {
             let _ = qsock.lock().unwrap().shutdown(std::net::Shutdown::Both);
+            info!("Session closed.");
             break;
         }
         if let Err(e) = utils::copy_until(reader.clone(), qsock.clone(), TIMEOUT) {
             if e.kind() == ErrorKind::BrokenPipe || e.kind() == ErrorKind::ConnectionAborted {
-                break;
+                exit = true;
+                continue;
             }
         }
         if let Err(e) = utils::copy_until(qsock.clone(), writer.clone(), TIMEOUT) {
             if e.kind() == ErrorKind::BrokenPipe || e.kind() == ErrorKind::ConnectionAborted {
-                break;
+                exit = true;
+                continue;
             }
         }
-    });
-
-    thread::spawn(move || {
-        #[cfg(not(target_os = "windows"))]
-        pty.child.wait();
-        #[cfg(target_os = "windows")]
-        let _ = pty.child.wait(None);
-        let _ = sender.send(true);
-        info!("Session closed.");
     });
 
     Ok(())
