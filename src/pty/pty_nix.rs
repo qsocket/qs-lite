@@ -19,10 +19,12 @@ pub struct Tty {
 }
 
 pub struct Child {
+    #[allow(dead_code)]
     pid: i32,
 }
 
 impl Child {
+    #[allow(dead_code)]
     pub fn wait(&self) {
         let _ = waitpid(Pid::from_raw(self.pid), None);
     }

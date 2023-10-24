@@ -4,6 +4,7 @@ use std::io::{stdin, stdout, Stdin, Stdout};
 use std::process::Command;
 
 pub struct Pty {
+    #[allow(dead_code)]
     pub child: Process,
     pub reader: PipeReader,
     pub writer: PipeWriter,
