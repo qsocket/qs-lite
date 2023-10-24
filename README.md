@@ -29,7 +29,7 @@
 [qsrn]: https://github.com/qsocket/qsrn
 
 
-qs-lite is the lightweight version of [qs-netcat](https://github.com/qsocket/qs-netcat) utility. It allows redirecting true PTY sessions with reverse connections over the [QSRN](qsrn), effectively accessing systems under NAT networks or firewalls.
+qs-lite is a alternative lightweight implementation of [qs-netcat](https://github.com/qsocket/qs-netcat) utility with Rust language. It allows redirecting true PTY sessions with reverse connections over the [QSRN](qsrn), effectively accessing systems under NAT networks or firewalls.
 
 > [!WARNING]  
 > This tool is in its early alpha development stage, featuring experimental functionality that may lack backwards compatibility, and users are advised to exercise caution and not use it in production environments.
@@ -67,24 +67,43 @@ qs-mic supports 10 architectures and 12 operating systems, check **Supported Pla
 
 ## Usage
 ```
-qs-lite 1.0
-Ege BALCI. <egebalci@pm.me>
-Qsocket lite shell.
+Usage: qs-lite [OPTIONS]
 
-USAGE:
-    qs-lite [OPTIONS]
-
-OPTIONS:
-    -C, --notls                  Disable TLS encryption.
-    -e, --exec [<INPUT>...]      Program to execute. [default: /bin/bash]
-    -g, --generate               Generate a random secret.
-    -h, --help                   Print help information
-        --pin                    Enable certificate fingerprint verification on TLS connections.
-    -q, --quiet                  Disable output.
-    -s, --secret [<INPUT>...]    Secret. (e.g. password).
-    -t, --probe [<INPUT>...]     Probe interval for QSRN. [default: 5]
-    -v, --verbose                Verbose output.
-    -V, --version                Print version information
+Options:
+  -s, --secret <SECRET>
+          secret. (e.g. password) [default: ]
+  -e, --exec <EXEC>
+          program to execute [default: "bash -il"]
+  -f, --forward-addr <FORWARD_ADDR>
+          forward address (IP:PORT) for traffic forwarding [default: ]
+  -x, --proxy-addr <PROXY_ADDR>
+          user socks proxy address for connecting QSRN [default: ]
+  -X, --cert-fingerprint <CERT_FINGERPRINT>
+          hex encoded TLS certificate fingerprint for validation [default: ]
+  -n, --probe <PROBE>
+          probe interval for connecting QSRN [default: 5]
+  -C, --no-encryption
+          disable all (TLS+E2E) encryption
+      --no-e2e
+          disable End-to-End encryption
+  -i, --interactive
+          initiate a full PTY (interactive) shell
+  -l, --listen
+          server mode. (listen for connections)
+  -g, --generate
+          generate a random secret
+  -T, --use-tor
+          use TOR network for connecting QSRN
+      --qr
+          generate a QR code with given stdin and print on the terminal
+  -q, --quiet
+          quiet mode. (no stdout)
+  -v, --verbose
+          verbose output mode
+  -h, --help
+          Print help
+  -V, --version
+          Print version
 ```
 ### Examples
 1. Log in to Workstation A from Workstation B through any firewall/NAT
