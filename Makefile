@@ -9,7 +9,7 @@ nightly:
 windows:
 	${BUILD} --target x86_64-pc-windows-gnu
 	${BUILD} --target i686-pc-windows-gnu
-	${BUILD} --target aarch64-pc-windows-msvc
+	${CROSS} --target aarch64-pc-windows-msvc
 linux:
 	${FLAGS} ${BUILD} --target x86_64-unknown-linux-musl
 	${FLAGS} ${CROSS} --target i686-unknown-linux-musl
