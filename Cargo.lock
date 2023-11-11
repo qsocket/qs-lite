@@ -673,6 +673,8 @@ dependencies = [
 [[package]]
 name = "qsocket"
 version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e59caac2bef975cc68a6a2548a899c6e24a01dad65d417e852b6961c9776e5f"
 dependencies = [
  "anyhow",
  "base64",
