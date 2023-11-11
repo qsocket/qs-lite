@@ -32,3 +32,9 @@ tar czvf "./release/qs-netcat_android_arm64.tar.gz" "./target/aarch64-linux-andr
 upx -q --best ./target/x86_64-linux-android/release/qs-lite
 echo -n "[*] Packaging x86_64-linux-android binary -> "
 tar czvf "./release/qs-netcat_android_amd64.tar.gz" "./target/x86_64-linux-android/release/qs-lite"
+
+## Darwin
+upx -q --best ./target/x86_64-apple-darwin/release/qs-lite
+echo -n "[*] Packaging x86_64-apple-darwin binary -> "
+tar czvf "./release/x86_64-apple-darwin.tar.gz" "./target/x86_64-apple-darwin/release/qs-lite"
+
