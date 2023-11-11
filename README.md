@@ -40,7 +40,7 @@ qs-lite is a alternative lightweight implementation of [qs-netcat](https://githu
 
 |  **Tool**   |                    **Build From Source**                     |      **Docker Image**       | **Binary Release**  |
 | :---------: | :----------------------------------------------------------: | :-------------------------: | :-----------------: |
-| **qs-lite** | ```cargo install --git https://github.com/qsocket/qs-lite``` | [Download](#docker-install) | [Download](release) |
+| **qs-lite** |                 ```cargo install qs-lite```                  | [Download](#docker-install) | [Download](release) |
 
 ---
 qs-mic supports 10 architectures and 12 operating systems, check **Supported Platforms** below for detailed table.

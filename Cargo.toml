@@ -1,7 +1,7 @@
 [package]
 name = "qs-lite"
 edition = "2021"
-version = "0.1.1"
+version = "0.1.3"
 authors = ["Ege BALCI <egebalci@pm.me>"]
 description = "QSocket liteweight beacon."
 license = "MIT"
