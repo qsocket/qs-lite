@@ -1,0 +1,35 @@
+name: macos-build
+
+on:
+  workflow_dispatch:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # build-linux:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Build
+  #     run: cargo build --releasee
+  # build-windows:
+  #   runs-on: windows-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Build
+  #     run: make windows
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: RUSTFLAGS="-C target-feature=+crt-static" cargo build --release
+    - name: 'Upload Artifact'
+      uses: actions/upload-artifact@v3
+      with:
+        name: qs-lite 
+        path: ./target/release/qs-lite
+        retention-days: 5
+
