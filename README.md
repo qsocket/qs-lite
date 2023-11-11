@@ -43,25 +43,25 @@ qs-lite is a alternative lightweight implementation of [qs-netcat](https://githu
 | **qs-lite** |                 ```cargo install qs-lite```                  | [Download](#docker-install) | [Download](release) |
 
 ---
-qs-mic supports 10 architectures and 12 operating systems, check **Supported Platforms** below for detailed table.
+qs-lite currently supports 3 architectures and 4 operating systems, check **Supported Platforms** below for detailed table.
 
 <details>
 <summary>Supported Platforms</summary>
 
 | **Platform**  | **AMD64** | **386** | **ARM** | **ARM64** | **MIPS** | **MIPS64** | **MIPS64LE** | **PPC64** | **PPC64LE** | **S390X** |
 | :-----------: | :-------: | :-----: | :-----: | :-------: | :------: | :--------: | :----------: | :-------: | :---------: | :-------: |
-|   **Linux**   |     ✅     |    ✅    |    ✅    |     ✅     |    ✅     |     ✅      |      ✅       |     ✅     |      ✅      |     ✅     |
+|   **Linux**   |     ✅     |    ✅    |    ❌    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
 |  **Darwin**   |     ✅     |    ❌    |    ❌    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-|  **Windows**  |     ✅     |    ✅    |    ✅    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-|  **OpenBSD**  |     ✅     |    ✅    |    ✅    |     ✅     |    ❌     |     ✅      |      ❌       |     ❌     |      ❌      |     ❌     |
-|  **NetBSD**   |     ✅     |    ✅    |    ✅    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-|  **FreeBSD**  |     ✅     |    ✅    |    ✅    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-|  **Android**  |     ✅     |    ✅    |    ✅    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-|    **IOS**    |     ✅     |    ❌    |    ❌    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-|  **Solaris**  |     ✅     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-|  **Illumos**  |     ✅     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-| **Dragonfly** |     ✅     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
-|    **AIX**    |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ✅     |      ❌      |     ❌     |
+|  **Windows**  |     ✅     |    ✅    |    ❌    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+|  **OpenBSD**  |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+|  **NetBSD**   |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+|  **FreeBSD**  |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+|  **Android**  |     ✅     |    ✅    |    ❌    |     ✅     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+|    **IOS**    |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+|  **Solaris**  |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+|  **Illumos**  |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+| **Dragonfly** |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
+|    **AIX**    |     ❌     |    ❌    |    ❌    |     ❌     |    ❌     |     ❌      |      ❌       |     ❌     |      ❌      |     ❌     |
 
 </details>
 
@@ -114,7 +114,7 @@ $ qs-lite -i      # Workstation B
 ---
 **Crypto / Security Mumble Jumble**
 - The connections are end-2-end encrypted. This means from User-2-User (and not just to the Relay Network). The Relay Network relays only (encrypted) data to and from the Users.
-- The QSocket uses [SRP](https://en.wikipedia.org/wiki/Secure_Remote_Password_protocol) for ensuring [perfect forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy). This means that the session keys a
+- The QSocket uses [SRP](https://en.wikipedia.org/wiki/Secure_Remote_Password_protocol) with [SPAKE2](https://docs.rs/spake2/latest/spake2/) and ChaCha20 for ensuring [perfect forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy). This means that the session keys a
 re always different, and recorded session traffic cannot be decrypted by the third parties even if the user secret is known.
 - The session key is 256 bit and ephemeral. It is freshly generated for every session and generated randomly (and is not based on the password).
 - A brute force attack against weak secrets requires a new TCP connection for every guess. But QSRN contains a strong load balancer which is limiting the consecutive connection attempts.
