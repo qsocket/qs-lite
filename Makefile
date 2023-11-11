@@ -22,14 +22,17 @@ linux:
 # ${BUILD} --target powerpc64-unknown-linux-gn
 # ${BUILD} --target powerpc64le-unknown-linux-gnu
 freebsd:
-	${FLAGS} ${CROSS} --target x86_64-unknown-freebsd
+	# ${CROSS} --target x86_64-unknown-freebsd
+	# ${FLAGS} ${CROSS} --target i686-unknown-freebsd
 openbsd:
+	# ${FLAGS} ${CROSS} --target x86_64-unknown-openbsd
+	# ${FLAGS} ${CROSS} --target i686-unknown-openbsd
 # ${BUILD} --target x86_64-unknown-openbsd
 netbsd:
-# ${BUILD} --target x86_64-unknown-netbsd
+	# ${FLAGS} ${BUILD} --target x86_64-unknown-netbsd
 android:
-	${FLAGS} ${CROSS} --target aarch64-linux-android
-	${FLAGS} ${CROSS} --target x86_64-linux-android
+	${FLAGS} ${BUILD} --target x86_64-linux-android
+	${FLAGS} ${BUILD} --target aarch64-linux-android
 ios:
 # ${BUILD} --target aarch64-apple-ios
 # ${BUILD} --target aarch64-apple-ios-sim
