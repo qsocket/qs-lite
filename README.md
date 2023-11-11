@@ -20,7 +20,7 @@
 [downloads-img]: https://img.shields.io/github/downloads/qsocket/qs-lite/total?logo=github
 [issues]: https://github.com/qsocket/qs-lite/issues
 [issues-img]: https://img.shields.io/github/issues/qsocket/qs-lite?color=red
-[docker-pulls]: https://img.shields.io/docker/pulls/qsocket/qs-lite?logo=docker&label=docker%20pulls
+[docker-pulls]: https://img.shields.io/docker/pulls/qsocket/qsocket?logo=docker&label=docker%20pulls
 [license]: https://raw.githubusercontent.com/qsocket/qs-lite/master/LICENSE
 [license-img]: https://img.shields.io/github/license/qsocket/qs-lite.svg
 [google-cloud-shell]: https://console.cloud.google.com/cloudshell/open?git_repo=https://github.com/qsocket/qs-lite&tutorial=README.md
